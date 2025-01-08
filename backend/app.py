@@ -2,6 +2,12 @@ from flask import Flask, request, jsonify
 import json
 import pymysql
 from flask_cors import CORS
+from dotenv import load_dotenv
+import os
+
+# Cargar las variables del archivo .env
+load_dotenv()
+
 
 app = Flask(__name__)
 
@@ -11,15 +17,15 @@ def db_connection():
     conn = None
     try:
         conn = pymysql.connect(
-            host="localhost",
-            user="root",
-            password="sancochito2",
-            database="escomcarreras",
+            host=os.getenv("DB_HOST"),  # Usar la variable de entorno
+            user=os.getenv("DB_USER"),  # Usar la variable de entorno
+            password=os.getenv("DB_PASSWORD"),  # Usar la variable de entorno
+            database=os.getenv("DB_DATABASE"),  # Usar la variable de entorno
             charset='utf8mb4',
             cursorclass=pymysql.cursors.DictCursor
         )
-    except pymysql.error as e:
-        print(e)
+    except pymysql.MySQLError as e:
+        print(f"Error al conectar a la base de datos: {e}")
     return conn
 
 @app.route('/carreras', methods=['GET', 'POST'])
@@ -65,8 +71,6 @@ def all_carreras():
             return jsonify({"error": "Failed to create carrera"}), 500
     
     return jsonify({"error": "Invalid method"}), 405  # Por si se envía un método no permitido
-
-
 
 @app.route('/carreras/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 def single_carrera(id):

@@ -199,3 +199,4 @@ dist-ssr
 *.sw?
 
 /frontend/node_modules
+/backend/.env
