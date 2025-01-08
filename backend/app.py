@@ -13,7 +13,7 @@ def db_connection():
         conn = pymysql.connect(
             host="localhost",
             user="root",
-            password="sancochito2",
+            password="",
             database="escomcarreras",
             charset='utf8mb4',
             cursorclass=pymysql.cursors.DictCursor
