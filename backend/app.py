@@ -5,22 +5,19 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 import os
 
-# Cargar las variables del archivo .env
 load_dotenv()
 
-
 app = Flask(__name__)
-
 CORS(app)
 
 def db_connection():
     conn = None
     try:
         conn = pymysql.connect(
-            host=os.getenv("DB_HOST"),  # Usar la variable de entorno
-            user=os.getenv("DB_USER"),  # Usar la variable de entorno
-            password=os.getenv("DB_PASSWORD"),  # Usar la variable de entorno
-            database=os.getenv("DB_DATABASE"),  # Usar la variable de entorno
+            host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database=os.getenv("DB_DATABASE"),
             charset='utf8mb4',
             cursorclass=pymysql.cursors.DictCursor
         )
@@ -56,74 +53,185 @@ def all_carreras():
     
     if request.method == 'POST':
         try:
-            new_carrera = request.form["carrera"]
-            new_descripcion = request.form["descripcionCarrera"]
-            new_semestres = int(request.form["semestres"])
-            new_plan = int(request.form["plan"])
+            data = request.form
+            if not all(key in data for key in ['carrera', 'descripcionCarrera', 'semestres', 'plan']):
+                return jsonify({"error": "Faltan campos requeridos"}), 400
             
             sql = """INSERT INTO carreras (carrera, descripcionCarrera, semestres, plan)
                      VALUES (%s, %s, %s, %s)"""
-            cursor.execute(sql, (new_carrera, new_descripcion, new_semestres, new_plan))
+            cursor.execute(sql, (
+                data['carrera'],
+                data['descripcionCarrera'],
+                int(data['semestres']),
+                int(data['plan'])
+            ))
             conn.commit()
             return jsonify({"message": "Carrera creada exitosamente"}), 201
+        except ValueError as e:
+            return jsonify({"error": "Formato de datos inválido"}), 400
         except Exception as e:
-            print(f"Error inserting carrera: {e}")
+            print(f"Error creating carrera: {e}")
             return jsonify({"error": "Failed to create carrera"}), 500
-    
-    return jsonify({"error": "Invalid method"}), 405  # Por si se envía un método no permitido
 
 @app.route('/carreras/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 def single_carrera(id):
     conn = db_connection()
+    if not conn:
+        return jsonify({"error": "Database connection failed"}), 500
+
     cursor = conn.cursor()
-    carrera = None
 
     if request.method == "GET":
-        cursor.execute("SELECT * FROM carreras WHERE idCarrera=%s", (id,))
-        rows = cursor.fetchall()
-        for r in rows:
-            carrera = r
-        if carrera is not None:
-            return jsonify(carrera), 200
-        else:
-            return "Carrera no encontrada", 404
+        try:
+            cursor.execute("SELECT * FROM carreras WHERE idCarrera=%s", (id,))
+            carrera = cursor.fetchone()
+            if carrera:
+                return jsonify(carrera), 200
+            return jsonify({"error": "Carrera no encontrada"}), 404
+        except Exception as e:
+            print(f"Error fetching carrera: {e}")
+            return jsonify({"error": str(e)}), 500
 
     if request.method == 'PUT':
-        sql = """UPDATE carreras 
-                 SET carrera=%s,
-                     descripcionCarrera=%s,
-                     semestres=%s,
-                     plan=%s
-                 WHERE idCarrera=%s"""
+        try:
+            data = request.form
+            if not all(key in data for key in ['carrera', 'descripcionCarrera', 'semestres', 'plan']):
+                return jsonify({"error": "Faltan campos requeridos"}), 400
 
-        carrera = request.form['carrera']
-        descripcion = request.form['descripcionCarrera']
-        semestres = int(request.form['semestres'])
-        plan = int(request.form['plan'])
-
-        updated_carrera = {
-            "idCarrera": id,
-            "carrera": carrera,
-            "descripcionCarrera": descripcion,
-            "semestres": semestres,
-            "plan": plan
-        }
-        
-        cursor.execute(sql, (carrera, descripcion, semestres, plan, id))
-        conn.commit()
-        return jsonify(updated_carrera)
+            sql = """UPDATE carreras 
+                     SET carrera=%s,
+                         descripcionCarrera=%s,
+                         semestres=%s,
+                         plan=%s
+                     WHERE idCarrera=%s"""
+            
+            cursor.execute(sql, (
+                data['carrera'],
+                data['descripcionCarrera'],
+                int(data['semestres']),
+                int(data['plan']),
+                id
+            ))
+            conn.commit()
+            return jsonify({"message": "Carrera actualizada exitosamente"}), 200
+        except ValueError as e:
+            return jsonify({"error": "Formato de datos inválido"}), 400
+        except Exception as e:
+            print(f"Error updating carrera: {e}")
+            return jsonify({"error": str(e)}), 500
 
     if request.method == 'DELETE':
         try:
-            sql = """DELETE FROM carreras WHERE idCarrera=%s"""
-            cursor.execute(sql, (id,))
+            cursor.execute("DELETE FROM carreras WHERE idCarrera=%s", (id,))
             conn.commit()
-            return jsonify({"message": f"La carrera con id {id} ha sido eliminada."}), 200
+            return jsonify({"message": f"Carrera eliminada exitosamente"}), 200
         except Exception as e:
             print(f"Error deleting carrera: {e}")
-            return jsonify({"error": "Failed to delete carrera"}), 500
+            return jsonify({"error": str(e)}), 500
 
+@app.route('/alumnos', methods=['GET', 'POST'])
+def all_alumnos():
+    conn = db_connection()
+    if not conn:
+        return jsonify({"error": "Database connection failed"}), 500
+
+    cursor = conn.cursor()
+
+    if request.method == 'GET':
+        try:
+            cursor.execute("SELECT * FROM alumnos")
+            all_alumnos = [
+                dict(
+                    idAlumno=row['idAlumno'],
+                    nombre=row['nombre'],
+                    carrera=row['carrera'],
+                    semestre=row['semestre'],
+                    boleta=row['boleta']
+                )
+                for row in cursor.fetchall()
+            ]
+            return jsonify(all_alumnos), 200
+        except Exception as e:
+            print(f"Error fetching alumnos: {e}")
+            return jsonify({"error": "Failed to fetch alumnos"}), 500
+
+    if request.method == 'POST':
+        try:
+            data = request.get_json()
+            if not all(key in data for key in ['nombre', 'carrera', 'semestre', 'boleta']):
+                return jsonify({"error": "Faltan campos requeridos"}), 400
+            
+            sql = """INSERT INTO alumnos (nombre, carrera, semestre, boleta)
+                    VALUES (%s, %s, %s, %s)"""
+            cursor.execute(sql, (
+                data['nombre'],
+                data['carrera'],
+                int(data['semestre']),
+                data['boleta']
+            ))
+            conn.commit()
+            return jsonify({"message": "Alumno creado exitosamente"}), 201
+        except ValueError as e:
+            return jsonify({"error": "Formato de datos inválido"}), 400
+        except Exception as e:
+            print(f"Error creating alumno: {e}")
+            return jsonify({"error": str(e)}), 500
+
+@app.route('/alumnos/<int:id>', methods=['GET', 'PUT', 'DELETE'])
+def single_alumno(id):
+    conn = db_connection()
+    if not conn:
+        return jsonify({"error": "Database connection failed"}), 500
+
+    cursor = conn.cursor()
+
+    if request.method == "GET":
+        try:
+            cursor.execute("SELECT * FROM alumnos WHERE idAlumno=%s", (id,))
+            alumno = cursor.fetchone()
+            if alumno:
+                return jsonify(alumno), 200
+            return jsonify({"error": "Alumno no encontrado"}), 404
+        except Exception as e:
+            print(f"Error fetching alumno: {e}")
+            return jsonify({"error": str(e)}), 500
+
+    if request.method == "PUT":
+        try:
+            data = request.get_json()
+            if not all(key in data for key in ['nombre', 'carrera', 'semestre', 'boleta']):
+                return jsonify({"error": "Faltan campos requeridos"}), 400
+
+            sql = """UPDATE alumnos
+                     SET nombre=%s,
+                         carrera=%s,
+                         semestre=%s,
+                         boleta=%s
+                     WHERE idAlumno=%s"""
+            
+            cursor.execute(sql, (
+                data['nombre'],
+                data['carrera'],
+                int(data['semestre']),
+                data['boleta'],
+                id
+            ))
+            conn.commit()
+            return jsonify({"message": "Alumno actualizado exitosamente"}), 200
+        except ValueError as e:
+            return jsonify({"error": "Formato de datos inválido"}), 400
+        except Exception as e:
+            print(f"Error updating alumno: {e}")
+            return jsonify({"error": str(e)}), 500
+
+    if request.method == "DELETE":
+        try:
+            cursor.execute("DELETE FROM alumnos WHERE idAlumno=%s", (id,))
+            conn.commit()
+            return jsonify({"message": "Alumno eliminado exitosamente"}), 200
+        except Exception as e:
+            print(f"Error deleting alumno: {e}")
+            return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
-
