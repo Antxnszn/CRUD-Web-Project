@@ -2,7 +2,7 @@ CREATE DATABASE IF NOT EXISTS ESCOM;
 
 USE ESCOM;
 
-CREATE TABLE Carrera (
+CREATE TABLE carreras (
     idCarrera BIGINT AUTO_INCREMENT PRIMARY KEY, -- Clave primaria autoincremental
     nombreCarrera VARCHAR(150) NOT NULL,         -- Nombre con un límite de 150 caracteres
     descripcionCarrera TEXT NOT NULL,            -- Descripción (texto largo)
