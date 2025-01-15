@@ -1,8 +1,8 @@
 ### Built With
 
-* <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" alt="Python" width="40" height="40"> [Python](https://www.python.org/)
-* <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" width="40" height="40"> [React](https://reactjs.org/)
-* <img src="https://camo.githubusercontent.com/7ffe065f0566855ccc002dbc7a6d5bb115dbebd7f7d6fc84199c7e4ff4359aba/68747470733a2f2f7777772e766563746f726c6f676f2e7a6f6e652f6c6f676f732f6d7973716c2f6d7973716c2d617232312e737667" alt="MySQL" width="40" height="40"> [MySQL](https://www.mysql.com/)
+* <img href="https://www.python.org/" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" alt="Python" width="40" height="40"> [Python](https://www.python.org/)
+* <img href="https://reactjs.org/" src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" width="auto" height="40">
+* <img src="https://camo.githubusercontent.com/7ffe065f0566855ccc002dbc7a6d5bb115dbebd7f7d6fc84199c7e4ff4359aba/68747470733a2f2f7777772e766563746f726c6f676f2e7a6f6e652f6c6f676f732f6d7973716c2f6d7973716c2d617232312e737667" alt="MySQL" width="auto" height="40"> [MySQL](https://www.mysql.com/)
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
